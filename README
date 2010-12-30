@@ -6,7 +6,8 @@
 Provide a simple PHP library for interacting with a AMQP queue.
 
 The library contains only the essential methods needed to enqueue, retrieve a message, and dequeue.
-This library requires the php-amqplib libarry in order to work.  This is just a simplified abstraction layer for working with a simple queue.
+
+This library requires the php-amqplib libary in order to work.  This is just a simplified abstraction layer for working with a simple queue.
 
 
 - Install -
