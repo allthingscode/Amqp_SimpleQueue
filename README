@@ -1,1 +1,20 @@
-@TODO
+
+= PHP AMQP Simple Queue (amqplib wrapper) =
+
+
+- Purpose -
+Provide a simple PHP library for interacting with a AMQP queue.
+
+The library contains only the essential methods needed to enqueue, retrieve a message, and dequeue.
+This library requires the php-amqplib libarry in order to work.  This is just a simplified abstraction layer for working with a simple queue.
+
+
+- Install -
+All of the files are meant to live in a directory call "Amqp".
+Create this directory somewhere in the php include path, and then add all the files.
+
+
+
+- Dependancies -
+php-amqplib (search github)
+
