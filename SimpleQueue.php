@@ -156,14 +156,14 @@ final class Amqp_SimpleQueue
 
 
     /**
-     * @param string
+     * @param AMQPConnection
      */
-    private function _setConsumerBroker( $newValue )
+    private function _setConsumerBroker( AMQPConnection $newValue )
     {
         $this->_properties['ConsumerBroker'] = $newValue;
     }
     /**
-     * @return string
+     * @return AMQPConnection
      */
     private function _getConsumerBroker()
     {
@@ -189,14 +189,14 @@ final class Amqp_SimpleQueue
 
 
     /**
-     * @param string
+     * @param AMQPChannel
      */
-    private function _setConsumerChannel( $newValue )
+    private function _setConsumerChannel( AMQPChannel $newValue )
     {
         $this->_properties['ConsumerChannel'] = $newValue;
     }
     /**
-     * @return string
+     * @return AMQPChannel
      */
     private function _getConsumerChannel()
     {
@@ -215,6 +215,68 @@ final class Amqp_SimpleQueue
         $hasConsumerChannel = array_key_exists( 'ConsumerChannel', $this->_properties );
         return $hasConsumerChannel;
     }
+    
+    
+    /**
+     * @param AMQPConnection
+     */
+    private function _setPublisherBroker( AMQPConnection $newValue )
+    {
+        $this->_properties['PublisherBroker'] = $newValue;
+    }
+    /**
+     * @return AMQPConnection
+     */
+    private function _getPublisherBroker()
+    {
+        if ( false === $this->_hasPublisherBroker() ) {
+            $amqpBroker = new AMQPConnection(
+                $this->getBrokerHost(),
+                $this->getBrokerPort(),
+                $this->getBrokerUsername(),
+                $this->getBrokerPassword()
+                );
+            $this->_setPublisherBroker( $amqpBroker );
+        }
+        return $this->_properties['PublisherBroker'];
+    }
+    /**
+     * @return bool
+     */
+    private function _hasPublisherBroker()
+    {
+        $hasPublisherBroker = array_key_exists( 'PublisherBroker', $this->_properties );
+        return $hasPublisherBroker;
+    }
+
+
+    /**
+     * @param AMQPChannel
+     */
+    private function _setPublisherChannel( AMQPChannel $newValue )
+    {
+        $this->_properties['PublisherChannel'] = $newValue;
+    }
+    /**
+     * @return AMQPChannel
+     */
+    private function _getPublisherChannel()
+    {
+        if ( false === $this->_hasPublisherChannel() ) {
+            $amqpBroker  = $this->_getPublisherBroker();
+            $amqpChannel = $amqpBroker->channel();
+            $this->_setPublisherChannel( $amqpChannel );
+        }
+        return $this->_properties['PublisherChannel'];
+    }
+    /**
+     * @return bool
+     */
+    private function _hasPublisherChannel()
+    {
+        $hasPublisherChannel = array_key_exists( 'PublisherChannel', $this->_properties );
+        return $hasPublisherChannel;
+    }
     // ------------------------------------------------------------------------
 
 
@@ -226,15 +288,9 @@ final class Amqp_SimpleQueue
      * @param string
      * @param array
      */
-    public function enqueue( $message, array $messageOptions )
+    public function sendMessage( $message, array $messageOptions = array() )
     {
-        $amqpBroker = new AMQPConnection(
-            $this->getBrokerHost(),
-            $this->getBrokerPort(),
-            $this->getBrokerUsername(),
-            $this->getBrokerPassword()
-            );
-        $amqpChannel = $amqpBroker->channel();
+        $amqpChannel = $this->_getPublisherChannel();
         $amqpChannel->access_request( $this->getBrokerVhost(), false, false, true, true );
 
         $amqpChannel->queue_declare( $this->getQueueName(), false, false, false, false );
@@ -242,16 +298,13 @@ final class Amqp_SimpleQueue
         $amqpMessage = new AMQPMessage( $message, $messageOptions );
 
         $amqpChannel->basic_publish( $amqpMessage, '', $this->getQueueName() );
-
-        $amqpChannel->close();
-        $amqpBroker->close();
     }
 
 
     /**
      * @return AMQPMessage|NULL
      */
-    public function getNextMessage()
+    public function receiveMessage()
     {
         $amqpChannel = $this->_getConsumerChannel();
 
@@ -266,7 +319,7 @@ final class Amqp_SimpleQueue
     /**
      * @param int This should be the delivery_info['delivery_tag'] value of the processed message.
      */
-    public function dequeue( $messageId )
+    public function deleteMessage( $messageId )
     {
         $amqpChannel = $this->_getConsumerChannel();
         $amqpChannel->basic_ack( $messageId );
@@ -278,6 +331,14 @@ final class Amqp_SimpleQueue
      */
     public function close()
     {
+        if ( true === $this->_hasPublisherChannel() ) {
+
+            $amqpChannel = $this->_getPublisherChannel();
+            $amqpChannel->close();
+
+            $amqpBroker = $this->_getPublisherBroker();
+            $amqpBroker->close();
+        }
         if ( true === $this->_hasConsumerChannel() ) {
 
             $amqpChannel = $this->_getConsumerChannel();
