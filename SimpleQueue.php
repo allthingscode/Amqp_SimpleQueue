@@ -1,6 +1,7 @@
 <?php
 
 require_once 'amqplib/amqp.inc';
+//define( 'AMQP_DEBUG', true );
 
 /**
  * @package Amqp
@@ -172,7 +173,8 @@ final class Amqp_SimpleQueue
                 $this->getBrokerHost(),
                 $this->getBrokerPort(),
                 $this->getBrokerUsername(),
-                $this->getBrokerPassword()
+                $this->getBrokerPassword(),
+                $this->getBrokerVhost()
                 );
             $this->_setConsumerBroker( $amqpBroker );
         }
@@ -215,8 +217,8 @@ final class Amqp_SimpleQueue
         $hasConsumerChannel = array_key_exists( 'ConsumerChannel', $this->_properties );
         return $hasConsumerChannel;
     }
-    
-    
+
+
     /**
      * @param AMQPConnection
      */
@@ -234,7 +236,8 @@ final class Amqp_SimpleQueue
                 $this->getBrokerHost(),
                 $this->getBrokerPort(),
                 $this->getBrokerUsername(),
-                $this->getBrokerPassword()
+                $this->getBrokerPassword(),
+                $this->getBrokerVhost()
                 );
             $this->_setPublisherBroker( $amqpBroker );
         }
@@ -291,6 +294,7 @@ final class Amqp_SimpleQueue
     public function sendMessage( $message, array $messageOptions = array() )
     {
         $amqpChannel = $this->_getPublisherChannel();
+
         $amqpChannel->access_request( $this->getBrokerVhost(), false, false, true, true );
 
         $amqpChannel->queue_declare( $this->getQueueName(), false, false, false, false );
