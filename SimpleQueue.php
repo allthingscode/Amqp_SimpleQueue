@@ -301,7 +301,7 @@ final class Amqp_SimpleQueue
 
         $amqpMessage = new AMQPMessage( $message, $messageOptions );
 
-        $amqpChannel->basic_publish( $amqpMessage, '', $this->getQueueName() );
+        $amqpChannel->basic_publish( $amqpMessage, '', $this->getQueueName(), false );
     }
 
 
